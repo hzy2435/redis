@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<bean id="poolConf" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxTotal" value="100"></property>
+		<property name="maxIdle" value="100"></property>
+		<property name="minIdle" value="10"></property>
+		<property name="maxWaitMillis" value="1000"></property>
+		<property name="blockWhenExhausted" value="true"></property>
+		<property name="testOnBorrow" value="false"></property>
+		<property name="testOnReturn" value="false"></property>
+		<property name="testOnCreate" value="false"></property>
+	</bean>
+	
+	<bean id="jedisConnFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory"
+		p:usePool="true" p:poolConfig-ref="poolConf" p:hostName="192.168.184.128" p:port="6666" p:password="123456" p:database="10">
+	</bean>
+	
+	<!-- 使用 FastJson 序列化 -->
+	<bean id="redisSerializerFactory" class="com.redis.common.RedisSerializerBean"></bean>
+	<bean id="fastJson2JsonRedisSerializer" factory-bean="redisSerializerFactory" factory-method="fastJson2JsonRedisSerializer"></bean>
+	
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate" 
+		p:connectionFactory-ref="jedisConnFactory">
+		<property name="keySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+		</property>
+		<property name="valueSerializer">
+			<!-- <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean> -->
+			<ref bean="fastJson2JsonRedisSerializer"/>
+		</property>
+		
+		<property name="hashKeySerializer">
+			<bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+		</property>
+		<property name="hashValueSerializer">
+			<ref bean="fastJson2JsonRedisSerializer"/>
+		</property>
+	</bean>
+
+</beans>
